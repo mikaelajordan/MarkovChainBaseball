@@ -43,7 +43,7 @@ def make_empty_transition_matrix():
                     (0,''), (0,'1'), (0,'2'), (0,'3'), (0,'12'), (0,'13'), (0,'23'), (0,'123'), 
                     (1,''), (1,'1'), (1,'2'), (1,'3'), (1,'12'), (1,'13'), (1,'23'), (1,'123'),
                     (2,''), (2,'1'), (2,'2'), (2,'3'), (2,'12'), (2,'13'), (2,'23'), (2,'123'),
-                    0, 1, 2, 3])
+                    '0', '1', '2', '3'])
     t_matrix = pd.DataFrame(0, columns=state_vector, index = state_vector)
     #print(t_matrix.shape)
     return(t_matrix)
@@ -95,7 +95,7 @@ def find_states(batting_row):
             end_runners+="3" 
         end_state = (end_outs, end_runners)
     else:
-        end_state = sum(pd.Series(destinations)>4)
+        end_state = str(sum(pd.Series(destinations)>4))
     return([(start_outs, start_runners), end_state])
     
 single_transition = find_states(min_atbats.iloc[1])
@@ -109,15 +109,12 @@ def make_transition_matrix(batting_data):
     Given batting data, create a transition matrix
     """
     t_matrix = make_empty_transition_matrix()
-    for row in (min_atbats.iloc[:5].iterrows()):
+    for index, row in (batting_data.iterrows()):
         transition = find_states(row)
-        t_matrix.at[(0,'123'),(0,'1')]+=1
-        #print(transition)
-    
+        t_matrix.at[transition[0],transition[1]]+=1
     return(t_matrix)
     
 
-min_transition = make_transition_matrix(min_atbats.iloc[:100].iterrows())
+#min_transition = make_transition_matrix(min_atbats.iloc[:100].iterrows())
+min_transition = make_transition_matrix(min_atbats)
 print(min_transition)
-
-min_transition.at[(0,'123'),(0,'1')]+=1
