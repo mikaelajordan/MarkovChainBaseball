@@ -4,8 +4,6 @@ import pickle
 import os
 
 
-
-
 def run_matrix():
     states=[(0,''), (0,'1'), (0,'2'), (0,'3'), (0, '12'), (0,'13'), (0,'23'), (0,'123'),
         (1,''), (1,'1'), (1,'2'), (3,'3'), (1, '12'), (1,'13'), (1,'23'), (1,'123'),
@@ -30,11 +28,10 @@ def run_matrix():
         R1[R1<0]=0
     return(R1)
 
-def import_raw_batting_data():
+def import_raw_batting_data(verbose = True):
     """
     Import Raw data from
     """
-
     ### Field names
     data_cols = ['gameid', 'visteam', 'inning', 'batteam', 'outs', 'balls',
         'strikes', 'visscore', 'homescore', 'resbatter', 'resbatterhand', 'respitcher',
@@ -46,7 +43,8 @@ def import_raw_batting_data():
     batting=pd.DataFrame()
     for filename in os.listdir():
         df = pd.read_csv(filename, header=None)
-        print(filename, df.shape)
+        if verbose==True:
+            print(filename, df.shape)
         batting = batting.append(df)
     os.chdir('..')
     batting.columns = data_cols
@@ -151,6 +149,9 @@ def predicted_runs(probability_vectors):
 
 
 def team_markov(transition_matrix, iterations=25):
+    """
+    Take team (not individual) markov transition matrix and return the expected runs per 9-inning game
+    """
     x0=np.concatenate([[1], np.zeros(27)])
     x=[x0]
     for i in range(1,iterations):
@@ -161,3 +162,22 @@ def team_markov(transition_matrix, iterations=25):
         runs=np.matmul(np.matmul(x[i], run_matrix()), x[i+1])
         Q+=[runs]
     return sum(Q)*9
+    x0=np.concatenate([[1], np.zeros(27)])
+    x=[x0]
+    for i in range(1,iterations):
+        vec=np.matmul(x[i-1],transition_matrix)
+        x+=[vec]
+    Q=[]
+    for i in range(0, len(x)-1):
+        runs=np.matmul(np.matmul(x[i], run_matrix()), x[i+1])
+        Q+=[runs]
+    return sum(Q)*9
+
+
+def team_markov_from_raw(raw_batting_data, team_code, n_batters_per_inning = 15):
+    """
+    Given raw batting data and a team's code, use a Markov chain to find the expected number of runs per 9 innings.
+    """
+    team_atbats = find_team_atbats(team_code, raw_batting_data)
+    team_transition = make_transition_matrix(team_atbats)
+    return(team_markov(team_transition, n_batters_per_inning))
