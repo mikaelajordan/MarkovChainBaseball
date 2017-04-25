@@ -110,3 +110,6 @@ play_by_play = play_by_play.append(pd.read_csv('./2016/was.txt', header=None), i
 
 play_by_play.columns = cols
 print(play_by_play.columns)
+print(play_by_play.head())
+
+play_by_play.to_csv('./plays.csv')
