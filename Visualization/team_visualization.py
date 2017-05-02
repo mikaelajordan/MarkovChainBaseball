@@ -24,7 +24,6 @@ from bokeh.models.widgets import Select
 from bokeh.models.annotations import Label
 
 
-
 raw_data = pd.read_csv('../Baseball_Data/team_2016_data_with_pred.csv')
 
 def get_dataset(league_option):
