@@ -6,6 +6,9 @@ import os
 
 
 def run_matrix():
+    """
+    Make Run matrix from scratch.
+    """
     states=[(0,''), (0,'1'), (0,'2'), (0,'3'), (0, '12'), (0,'13'), (0,'23'), (0,'123'),
         (1,''), (1,'1'), (1,'2'), (3,'3'), (1, '12'), (1,'13'), (1,'23'), (1,'123'),
         (2,''), (2,'1'), (2,'2'), (2,'3'), (2, '12'), (2,'13'), (2,'23'),(2,'123'), '0', '1', '2', '3']
@@ -55,7 +58,7 @@ def import_raw_batting_data(verbose = True):
 
 def make_empty_transition_matrix():
     """
-    Initialize a transition matrix with row and column names
+    Initialize a transition matrix with row and column names and zero entries.
     """
     state_vector = pd.Series([
                     (0,''), (0,'1'), (0,'2'), (0,'3'), (0,'12'), (0,'13'), (0,'23'), (0,'123'),
@@ -150,6 +153,9 @@ def make_team_transition_matrix(team_code):
         transition_dictionary[player] = make_transition_matrix(player_batting[player])
     return(transition_dictionary)
 
+"""
+#25 April
+These two are probably obsolete:
 
 def prob_vec(transition_mat, iterations):
     x0=np.concatenate([[1], np.zeros(27)])
@@ -166,7 +172,7 @@ def predicted_runs(probability_vectors):
         runs=np.matmul(np.matmul(probability_vectors[i], run_matrix()), probability_vectors[i+1])
         Q+=[runs]
     return(Q)
-
+"""
 
 def team_markov(transition_matrix, iterations=15):
     """
