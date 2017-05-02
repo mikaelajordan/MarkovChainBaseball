@@ -4,6 +4,8 @@ import pickle
 import os
 
 
+
+
 def run_matrix():
     states=[(0,''), (0,'1'), (0,'2'), (0,'3'), (0, '12'), (0,'13'), (0,'23'), (0,'123'),
         (1,''), (1,'1'), (1,'2'), (3,'3'), (1, '12'), (1,'13'), (1,'23'), (1,'123'),
@@ -28,10 +30,11 @@ def run_matrix():
         R1[R1<0]=0
     return(R1)
 
-def import_raw_batting_data(verbose = True):
+def import_raw_batting_data():
     """
     Import Raw data from
     """
+
     ### Field names
     data_cols = ['gameid', 'visteam', 'inning', 'batteam', 'outs', 'balls',
         'strikes', 'visscore', 'homescore', 'resbatter', 'resbatterhand', 'respitcher',
@@ -39,12 +42,11 @@ def import_raw_batting_data(verbose = True):
         'pinchhitflag', 'defensivepos', 'lineuppos', 'eventtype', 'battereventflag', 'abflag',
         'hitvalue', 'SHflag', 'SFflag', 'outsonplay', 'RBIonplay', 'wildpitchflag',
         'passedballflag', 'numerrors', 'batterdest', 'runon1dest', 'runon2dest', 'runon3dest']
-    os.chdir('2016')
+    # os.chdir('../Baseball_Data/Play_by_Play/')
     batting=pd.DataFrame()
     for filename in os.listdir():
         df = pd.read_csv(filename, header=None)
-        if verbose==True:
-            print(filename, df.shape)
+        # print(filename, df.shape)
         batting = batting.append(df)
     os.chdir('..')
     batting.columns = data_cols
@@ -77,6 +79,21 @@ def find_team_atbats(team_code, batting_data):
     visiting_atbats = batting_data[(batting_data['visteam'] == team_code)&(batting_data['batteam'] == 0)]
     home_atbats = batting_data[(batting_data['gameid'].str.contains(team_code)) & (batting_data['batteam'] == 1)]
     return(home_atbats.append(visiting_atbats))
+
+
+
+def find_player_atbats(teamCode, batData):
+    """
+    Given a team code and batting data, returns a dictionary of dataframes with
+    each player's at bats
+    """
+    visit = batData[(batData['visteam'] == teamCode) & (batData['batteam'] == 0)]
+    home = batData[(batData['gameid'].str.contains(teamCode)) & (batData['batteam'] == 1)]
+    complete = home.append(visit)
+    playerAtBats = {}
+    for player in complete['resbatter'].unique():
+        playerAtBats[player] = complete[(complete['resbatter'] == player)]
+    return(playerAtBats)
 
 
 
@@ -132,6 +149,14 @@ def make_transition_matrix(batting_data):
                 t_matrix.iloc[i,j]= t_matrix.iloc[i,j]/row_sum
     return(t_matrix)
 
+def make_team_transition_matrix(team_code):
+    batting = import_raw_batting_data()
+    transition_dictionary = {}
+    player_batting = find_player_atbats(team_code, batting)
+    for player in player_batting.keys():
+        transition_dictionary[player] = make_transition_matrix(player_batting[player])
+    return(transition_dictionary)
+
 def prob_vec(transition_mat, iterations):
     x0=np.concatenate([[1], np.zeros(27)])
     x=[x0]
@@ -149,9 +174,6 @@ def predicted_runs(probability_vectors):
 
 
 def team_markov(transition_matrix, iterations=25):
-    """
-    Take team (not individual) markov transition matrix and return the expected runs per 9-inning game
-    """
     x0=np.concatenate([[1], np.zeros(27)])
     x=[x0]
     for i in range(1,iterations):
@@ -162,22 +184,3 @@ def team_markov(transition_matrix, iterations=25):
         runs=np.matmul(np.matmul(x[i], run_matrix()), x[i+1])
         Q+=[runs]
     return sum(Q)*9
-    x0=np.concatenate([[1], np.zeros(27)])
-    x=[x0]
-    for i in range(1,iterations):
-        vec=np.matmul(x[i-1],transition_matrix)
-        x+=[vec]
-    Q=[]
-    for i in range(0, len(x)-1):
-        runs=np.matmul(np.matmul(x[i], run_matrix()), x[i+1])
-        Q+=[runs]
-    return sum(Q)*9
-
-
-def team_markov_from_raw(raw_batting_data, team_code, n_batters_per_inning = 15):
-    """
-    Given raw batting data and a team's code, use a Markov chain to find the expected number of runs per 9 innings.
-    """
-    team_atbats = find_team_atbats(team_code, raw_batting_data)
-    team_transition = make_transition_matrix(team_atbats)
-    return(team_markov(team_transition, n_batters_per_inning))
