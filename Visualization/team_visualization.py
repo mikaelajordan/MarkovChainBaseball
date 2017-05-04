@@ -58,14 +58,14 @@ def make_plot(source, title_text, league):
         ]
     )
 
-    p = figure(plot_width=800, plot_height=800, tools=[hover], title = title_text)
+    p = figure(plot_width=400, plot_height=400, tools=[hover], title = title_text)
     p.x_range = Range1d(3, 7)
     p.y_range = Range1d(3, 7)
 
     p.xaxis.axis_label = "Expected Runs Per Game"
     p.yaxis.axis_label = "Actual Runs Per Game"
     
-    p.circle(x="expected_runs", y="actual_runs", size=15, line_color="black", 
+    p.circle(x="expected_runs", y="actual_runs", size=10, line_color="black", 
         fill_color="firebrick", fill_alpha=0.5, source=source)
     p.line(x=[3,9],y=[3,9], line_width=4, line_color="navy", alpha=0.7)
     p.line(x=[3,9],y=[3,9], line_width=175, line_color="navy", alpha=0.05)
