@@ -7,14 +7,16 @@ Use the ``bokeh serve`` command to run the example by executing:
 The visualization should then appear in your browser.
 
 TODO:
-[ ] Import player lists
+[ ] Import player lists and add to dropdown
 [ ] Import Markov chain commands
 [ ] Find optimal batting lineup for each set of 9
 [ ] Make interesting optimization 
 [x] Make button to run the Markov chain 
 		(in case user wants to change multiple positions)
-[ ] Make Paragraph text wider than column
-
+[ ] Make labels default, e.g. `background_fill_color='white'`
+[ ] Make Paragraph text wider than column (maybe gridLayout)
+[ ] Include Select dropdown for team or league
+[ ] Include radio button for DH vs pitcher
 '''
 
 
@@ -62,20 +64,24 @@ field.patch(x=[0,1,0,-1], y=[0,1,2,1], line_color = "black", color="tan")
 
 
 # Set up widgets for 9 positions:
-select_catcher    = Select(title="Catcher:", 		value="bar", options=["Jason Castro", "bar", "baz", "quux", "Dude with really long name"])
-select_pitcher_dh = Select(title="Pitcher:", 		value="baz", options=["Santana", "bar", "baz", "quux", "Dude with really long name"])
-select_first      = Select(title="First Base:", 	value="quux", options=["Joe Mauer", "bar", "baz", "quux", "Dude with really long name"])
-select_second     = Select(title="Second Base", 	value="Brian Dozier", options=["Brian Dozier", "bar", "baz", "quux", "Dude with really long name"])
-select_third      = Select(title="Third Base", 		value="bar", options=["Brian Dozier", "bar", "baz", "quux", "Dude with really long name"])
-select_short      = Select(title="Shortstop:", 		value="bar", options=["Brian Dozier", "bar", "baz", "quux", "Dude with really long name"])
-select_lfield     = Select(title="Left Field:", 	value="bar", options=["Brian Dozier", "bar", "baz", "quux", "Dude with really long name"])
-select_cfield     = Select(title="Center Field:",	value="bar", options=["Brian Dozier", "bar", "baz", "quux", "Dude with really long name"])
-select_rfield     = Select(title="Right Field:", 	value="bar", options=["Brian Dozier", "bar", "baz", "quux", "Dude with really long name"])
+sample_player_list = ["Jason Castro", "Brian Dozier", "bar", "baz", "quux", 
+					"Dude with really long name", 
+					"Dude with really really long name"]
+select_catcher    = Select(title="Catcher:", 		value="bar", options=sample_player_list)
+select_pitcher_dh = Select(title="Pitcher:", 		value="baz", options=sample_player_list)
+select_first      = Select(title="First Base:", 	value="quux", options=sample_player_list)
+select_second     = Select(title="Second Base", 	value="Brian Dozier", options=sample_player_list)
+select_third      = Select(title="Third Base", 		value="bar", options=sample_player_list)
+select_short      = Select(title="Shortstop:", 		value="bar", options=sample_player_list)
+select_lfield     = Select(title="Left Field:", 	value="bar", options=sample_player_list)
+select_cfield     = Select(title="Center Field:",	value="bar", options=sample_player_list)
+select_rfield     = Select(title="Right Field:", 	value="bar", options=sample_player_list)
 
 output = Paragraph()
-batting_lineup_list = " ".join([select_pitcher_dh.value, select_catcher.value, select_first.value, 
-                 select_second.value, select_third.value, select_short.value, select_lfield.value, 
-                 select_cfield.value, select_rfield.value])
+batting_lineup_list = " ".join([select_pitcher_dh.value, select_catcher.value, 
+				select_first.value, select_second.value, select_third.value, 
+				select_short.value, select_lfield.value, select_cfield.value, 
+				select_rfield.value])
 output.text = batting_lineup_list
 
 position_select_list = [select_pitcher_dh,select_catcher, select_first, 
@@ -84,70 +90,75 @@ position_select_list = [select_pitcher_dh,select_catcher, select_first,
 
 
 # Make player text Labels
-pitcher_dh = Label(x=0, y=math.sqrt(2)/2, text = " "+select_pitcher_dh.value+", ", 
+# Set label Defaults here:
+#
+#
+#
+
+pitcher_dh_lab = Label(x=0, y=math.sqrt(2)/2, text = " "+select_pitcher_dh.value+", ", 
                    x_offset=0, y_offset=5, #render_mode='canvas',
                    border_line_color='black',
                    background_fill_color='white', 
                    text_align = 'center', # options are 'left', 'right', 'center'
                    text_baseline = "alphabetic")
 
-catcher = Label(x=0, y=0, text=' '+select_catcher.value+' ', 
+catcher_lab = Label(x=0, y=0, text=' '+select_catcher.value+' ', 
                 x_offset=0, y_offset=-10, border_line_color='black',
                 background_fill_color='white', text_align = 'center', text_baseline = "alphabetic")
 
-first = Label(x=1, y=1, text=' '+select_first.value+' ',
-              x_offset=-15, y_offset=5,  border_line_color='black',
+first_lab = Label(x=1, y=1, text=' '+select_first.value+' ',
+              x_offset=-20, y_offset=5,  border_line_color='black',
               background_fill_color='white',  text_align = 'left', text_baseline = "alphabetic") 
 
-second = Label(x=0.2, y=1.8, text=' '+select_second.value+' ',
+second_lab = Label(x=0.2, y=1.8, text=' '+select_second.value+' ',
                x_offset=0, y_offset=0, border_line_color='black',
                background_fill_color='white', text_align = 'left', text_baseline = "alphabetic") 
 
-third = Label(x=-1, y=1, text=' '+select_third.value+' ',
-              x_offset=15, y_offset=5,  border_line_color='black',
+third_lab = Label(x=-1, y=1, text=' '+select_third.value+' ',
+              x_offset=20, y_offset=5,  border_line_color='black',
               background_fill_color='white',  text_align = 'right', text_baseline = "alphabetic") 
 
-short = Label(x=-0.2, y=1.8, text=' '+select_short.value+' ',
+short_lab = Label(x=-0.2, y=1.8, text=' '+select_short.value+' ',
               x_offset=0, y_offset=0, border_line_color='black',
               background_fill_color='white', text_align = 'right', text_baseline = "alphabetic") 
 
-lfield = Label(x=-1.5, y=2.5, text=' '+select_lfield.value+' ',
+lfield_lab = Label(x=-1.5, y=2.5, text=' '+select_lfield.value+' ',
                x_offset=0, y_offset=0, border_line_color='black',
                background_fill_color='white', text_align = 'center', text_baseline = "alphabetic") 
 
-cfield = Label(x=0, y=3, text=' '+select_cfield.value+' ',
+cfield_lab = Label(x=0, y=3, text=' '+select_cfield.value+' ',
                x_offset=0, y_offset=0, border_line_color='black',
                background_fill_color='white', text_align = 'center', text_baseline = "alphabetic") 
 
-rfield = Label(x=1.5, y=2.5, text=' '+select_rfield.value+' ',
+rfield_lab = Label(x=1.5, y=2.5, text=' '+select_rfield.value+' ',
                x_offset=0, y_offset=0, border_line_color='black',
                background_fill_color='white', text_align = 'center', text_baseline = "alphabetic") 
 
 # Put text in field plot
-field.add_layout(catcher)
-field.add_layout(pitcher_dh)
-field.add_layout(first)
-field.add_layout(second)
-field.add_layout(third)
-field.add_layout(short)
-field.add_layout(lfield)
-field.add_layout(cfield)
-field.add_layout(rfield)
+field.add_layout(pitcher_dh_lab)
+field.add_layout(catcher_lab)
+field.add_layout(first_lab)
+field.add_layout(second_lab)
+field.add_layout(third_lab)
+field.add_layout(short_lab)
+field.add_layout(lfield_lab)
+field.add_layout(cfield_lab)
+field.add_layout(rfield_lab)
 
 
 # Set up callbacks
 def update_field(attrname, old, new):
 
     # Get the current Select values
-	pitcher_dh.text = ' '+ select_pitcher_dh.value	+' '
-	catcher.text    = ' '+ select_catcher.value		+' '
-	first.text      = ' '+ select_first.value		+' '
-	second.text     = ' '+ select_second.value		+' '
-	third.text      = ' '+ select_third.value		+' '
-	short.text      = ' '+ select_short.value		+' '
-	lfield.text     = ' '+ select_lfield.value		+' '
-	cfield.text     = ' '+ select_cfield.value		+' '
-	rfield.text     = ' '+ select_rfield.value		+' '
+	pitcher_dh_lab.text = ' '+ select_pitcher_dh.value	+' '
+	catcher_lab.text    = ' '+ select_catcher.value		+' '
+	first_lab.text      = ' '+ select_first.value		+' '
+	second_lab.text     = ' '+ select_second.value		+' '
+	third_lab.text      = ' '+ select_third.value		+' '
+	short_lab.text      = ' '+ select_short.value		+' '
+	lfield_lab.text     = ' '+ select_lfield.value		+' '
+	cfield_lab.text     = ' '+ select_cfield.value		+' '
+	rfield_lab.text     = ' '+ select_rfield.value		+' '
 
 
 # Call the update_field function whenever a Select is changed
