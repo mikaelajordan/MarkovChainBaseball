@@ -42,7 +42,7 @@ def import_raw_batting_data():
         'pinchhitflag', 'defensivepos', 'lineuppos', 'eventtype', 'battereventflag', 'abflag',
         'hitvalue', 'SHflag', 'SFflag', 'outsonplay', 'RBIonplay', 'wildpitchflag',
         'passedballflag', 'numerrors', 'batterdest', 'runon1dest', 'runon2dest', 'runon3dest']
-    # os.chdir('../Baseball_Data/Play_by_Play/')
+    os.chdir('../Baseball_Data/Play_by_Play/')
     batting=pd.DataFrame()
     for filename in os.listdir():
         df = pd.read_csv(filename, header=None)

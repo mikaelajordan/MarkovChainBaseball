@@ -12,8 +12,10 @@ def find_top_batters(team_code, n):
     return(topPlayers.index.tolist())
 #
 yankHitters = find_top_batters('NYA', 9)
-yanksMarkov = make_team_transition_matrix('NYA')
+print(len(yankHitters))
+# yanksMarkov = make_team_transition_matrix('NYA')
 # print(yanksMarkov.keys())
+print(list(itertools.permutations(list(yankHitters), 9)))
 
 
 def individual_markov(top_batter_list, team_dictionary, iterations=25):
@@ -46,8 +48,8 @@ def individual_markov(top_batter_list, team_dictionary, iterations=25):
     runDict = {'Best Order': battingOrders[topOrder], 'Associated Run Count': highRuns}
     return(runDict)
 
-yanksRuns = individual_markov(yankHitters, yanksMarkov, iterations=25)
-print(yanksRuns)
+# yanksRuns = individual_markov(yankHitters, yanksMarkov, iterations=25)
+# print(yanksRuns)
 # print(len(list(itertools.combinations(yankHitters, 9))))
 # print(len(yanksRuns))
 
