@@ -20,6 +20,8 @@ TODO:
 '''
 
 
+
+
 #Import packages
 import pandas as pd
 import numpy as np
@@ -29,7 +31,8 @@ import math
 from bokeh.io import curdoc
 from bokeh.layouts import row, column, widgetbox
 from bokeh.models import ColumnDataSource
-from bokeh.models.widgets import Slider, TextInput, Select, Paragraph, Button
+from bokeh.models.widgets import Slider, TextInput, Select
+from bokeh.models.widgets import Paragraph, Button, MultiSelect
 from bokeh.plotting import figure
 
 from bokeh.models import HoverTool, Legend
@@ -49,6 +52,31 @@ from bokeh.io import vform
 #
 
 
+
+# Import player and team names and data
+player_names = pd.read_csv("../Baseball_Data/player_id.csv")
+player_names = pd.concat([player_names['bref_id'], 
+                          player_names['bref_name'], 
+                          player_names['mlb_team'], 
+                          player_names['mlb_team_long'], 
+                          player_names['mlb_pos']], axis = 1)
+
+
+team_codes = player_names['mlb_team_long']
+team_codes = team_codes.drop_duplicates()
+team_codes = team_codes.sort_values().tolist()
+print(team_codes)
+team_codes = [i for i in team_codes if i != "Anaheim Angels"]
+print(team_codes)
+
+team_select = MultiSelect(title="MLB Team:", value=["Minnesota Twins"],
+                           options=team_codes)
+team_selected_players = player_names.loc[player_names['mlb_team_long'] == "Minnesota Twins"] 
+
+
+
+
+
 # Draw field plot
 field = figure(tools=[],
             width=650, height=650, toolbar_location="above")
@@ -63,39 +91,74 @@ field.wedge(x=0, y=0, radius=3.5,
 field.patch(x=[0,1,0,-1], y=[0,1,2,1], line_color = "black", color="tan")
 
 
-# Set up widgets for 9 positions:
-sample_player_list = ["Jason Castro", "Brian Dozier", "bar", "baz", "quux", 
-					"Dude with really long name", 
-					"Dude with really really long name"]
-select_catcher    = Select(title="Catcher:", 		value="bar", options=sample_player_list)
-select_pitcher_dh = Select(title="Pitcher:", 		value="baz", options=sample_player_list)
-select_first      = Select(title="First Base:", 	value="quux", options=sample_player_list)
-select_second     = Select(title="Second Base", 	value="Brian Dozier", options=sample_player_list)
-select_third      = Select(title="Third Base", 		value="bar", options=sample_player_list)
-select_short      = Select(title="Shortstop:", 		value="bar", options=sample_player_list)
-select_lfield     = Select(title="Left Field:", 	value="bar", options=sample_player_list)
-select_cfield     = Select(title="Center Field:",	value="bar", options=sample_player_list)
-select_rfield     = Select(title="Right Field:", 	value="bar", options=sample_player_list)
+# Set up Select widgets for 9 positions:
+"""
+Position codes are as follows: P, C, CF, 1B, RF, OF, 3B, LF, DH, SS, 2B
+"""
+outfield = ["LF", "CF", "RF"]
+infield = ["2B", "3B", "SS"]
+pitch_dh = ["P", "DH"]
 
-output = Paragraph()
+catcher_options  = team_selected_players.loc[team_selected_players['mlb_pos'] == "C"]
+catcher_list     = [""]+[x for x in catcher_options['bref_name'].tolist() if str(x) != 'nan']
+pitcher_dh_options=team_selected_players.loc[team_selected_players['mlb_pos'].isin(pitch_dh)]
+pitcher_dh_list  = [""]+[x for x in pitcher_dh_options['bref_name'].tolist() if str(x) != 'nan']
+first_options    = team_selected_players.loc[team_selected_players['mlb_pos'] == "1B"]
+first_list       = [""]+[x for x in first_options['bref_name'].tolist() if str(x) != 'nan']
+second_options   = team_selected_players.loc[team_selected_players['mlb_pos'].isin(infield)]
+second_list      = [""]+[x for x in second_options['bref_name'].tolist() if str(x) != 'nan']
+third_options    = team_selected_players.loc[team_selected_players['mlb_pos'].isin(infield)]
+third_list       = [""]+[x for x in third_options['bref_name'].tolist() if str(x) != 'nan']
+short_options    = team_selected_players.loc[team_selected_players['mlb_pos'].isin(infield)]
+short_list       = [""]+[x for x in short_options['bref_name'].tolist() if str(x) != 'nan']
+lfield_options   = team_selected_players.loc[team_selected_players['mlb_pos'].isin(outfield)]
+lfield_list      = [""]+[x for x in lfield_options['bref_name'].tolist() if str(x) != 'nan']
+cfield_options   = team_selected_players.loc[team_selected_players['mlb_pos'].isin(outfield)]
+cfield_list      = [""]+[x for x in cfield_options['bref_name'].tolist() if str(x) != 'nan']
+rfield_options   = team_selected_players.loc[team_selected_players['mlb_pos'].isin(outfield)]
+rfield_list      = [""]+[x for x in rfield_options['bref_name'].tolist() if str(x) != 'nan']
+
+
+select_catcher    = Select(title="Catcher:", 		value="", 
+	options=catcher_list)
+select_pitcher_dh = Select(title="Pitcher:", 		value="", 
+	options=pitcher_dh_list)
+select_first      = Select(title="First Base:", 	value="", 
+	options=first_list)
+select_second     = Select(title="Second Base", 	value="", 
+	options=second_list)
+select_third      = Select(title="Third Base", 		value="", 
+	options=third_list)
+select_short      = Select(title="Shortstop:", 		value="", 
+	options=short_list)
+select_lfield     = Select(title="Left Field:", 	value="", 
+	options=lfield_list)
+select_cfield     = Select(title="Center Field:",	value="", 
+	options=cfield_list)
+select_rfield     = Select(title="Right Field:", 	value="", 
+	options=rfield_list)
+
+team_text = Paragraph()
+batting_order_text = Paragraph()
+"""
 batting_lineup_list = " ".join([select_pitcher_dh.value, select_catcher.value, 
 				select_first.value, select_second.value, select_third.value, 
 				select_short.value, select_lfield.value, select_cfield.value, 
 				select_rfield.value])
-output.text = batting_lineup_list
+batting_order_text.text = batting_lineup_list
+"""
 
 position_select_list = [select_pitcher_dh,select_catcher, select_first, 
                  select_second, select_third, select_short, select_lfield, 
                  select_cfield, select_rfield]
 
 
-# Make player text Labels
-# Set label Defaults here:
-#
-#
-#
 
-pitcher_dh_lab = Label(x=0, y=math.sqrt(2)/2, text = " "+select_pitcher_dh.value+", ", 
+
+
+
+# Add labels to field plot
+pitcher_dh_lab = Label(x=0, y=math.sqrt(2)/2, text = " "+select_pitcher_dh.value+" ", 
                    x_offset=0, y_offset=5, #render_mode='canvas',
                    border_line_color='black',
                    background_fill_color='white', 
@@ -147,8 +210,57 @@ field.add_layout(rfield_lab)
 
 
 # Set up callbacks
-def update_field(attrname, old, new):
+def update_player_options():	
+	#print(team_codes)
+	print(team_select.value)
+	team_selected_players = player_names.loc[player_names['mlb_team_long'].isin(team_select.value)] 
+	print(team_selected_players)
 
+	outfield = ["LF", "CF", "RF"]
+	infield = ["2B", "3B", "SS"]
+	pitch_dh = ["P", "DH"]
+	
+	catcher_options  = team_selected_players.loc[team_selected_players['mlb_pos'] == "C"]
+	catcher_list     = [""]+[x for x in catcher_options['bref_name'].tolist() if str(x) != 'nan']
+	select_catcher.options = catcher_list
+
+	pitcher_dh_options=team_selected_players.loc[team_selected_players['mlb_pos'].isin(pitch_dh)]
+	pitcher_dh_list  = [""]+[x for x in pitcher_dh_options['bref_name'].tolist() if str(x) != 'nan']
+	select_pitcher_dh.options = pitcher_dh_list
+	
+	first_options    = team_selected_players.loc[team_selected_players['mlb_pos'] == "1B"]
+	first_list       = [""]+[x for x in first_options['bref_name'].tolist() if str(x) != 'nan']
+	select_first.options = first_list
+
+	second_options   = team_selected_players.loc[team_selected_players['mlb_pos'].isin(infield)]
+	second_list      = [""]+[x for x in second_options['bref_name'].tolist() if str(x) != 'nan']
+	select_second.options = second_list
+
+	third_options    = team_selected_players.loc[team_selected_players['mlb_pos'].isin(infield)]
+	third_list       = [""]+[x for x in third_options['bref_name'].tolist() if str(x) != 'nan']
+	select_third.options = third_list
+
+	short_options    = team_selected_players.loc[team_selected_players['mlb_pos'].isin(infield)]
+	short_list       = [""]+[x for x in short_options['bref_name'].tolist() if str(x) != 'nan']
+	select_short.options = short_list
+
+	lfield_options   = team_selected_players.loc[team_selected_players['mlb_pos'].isin(outfield)]
+	lfield_list      = [""]+[x for x in lfield_options['bref_name'].tolist() if str(x) != 'nan']
+	select_lfield.options = lfield_list
+
+	cfield_options   = team_selected_players.loc[team_selected_players['mlb_pos'].isin(outfield)]
+	cfield_list      = [""]+[x for x in cfield_options['bref_name'].tolist() if str(x) != 'nan']
+	select_cfield.options = cfield_list
+
+	rfield_options   = team_selected_players.loc[team_selected_players['mlb_pos'].isin(outfield)]
+	rfield_list      = [""]+[x for x in rfield_options['bref_name'].tolist() if str(x) != 'nan']
+	select_rfield.options = rfield_list
+
+
+
+
+
+def update_field(attrname, old, new):
     # Get the current Select values
 	pitcher_dh_lab.text = ' '+ select_pitcher_dh.value	+' '
 	catcher_lab.text    = ' '+ select_catcher.value		+' '
@@ -165,12 +277,16 @@ def update_field(attrname, old, new):
 for w in position_select_list:
     w.on_change('value', update_field)
 
+
 #Make button
-button = Button(label="Update Lineup")
+lineup_button = Button(label="Update Lineup")
+team_button=Button(label = "Reset Roster")
 
 
 # Callback for button
 def update_lineup():
+	update_player_options()
+	# Check to see if team has changed
 	# Do lineup optimization here:
 	#
 	#
@@ -180,19 +296,47 @@ def update_lineup():
 	#
 
 	# Print text for batting lineup
-	batting_lineup_list = ", ".join([select_pitcher_dh.value, select_catcher.value, select_first.value, 
-                 select_second.value, select_third.value, select_short.value, select_lfield.value, 
-                 select_cfield.value, select_rfield.value])
-	output.text = batting_lineup_list
+	batting_lineup_list = ", ".join([select_pitcher_dh.value, 
+				select_catcher.value, select_first.value, select_second.value, 
+				select_third.value, select_short.value, select_lfield.value,
+				select_cfield.value, select_rfield.value])
+	team_list = ", ".join([str(i) for i in team_select.value])
+	batting_order_text.text = "PLAYERS: \n" + batting_lineup_list
+	team_text.text = "TEAMS: \n" + team_list
+
+
+# Callback for team select button
+def update_players():
+	update_player_options()
+	select_pitcher_dh.value = ""
+	select_catcher.value = ""
+	select_first.value = ""
+	select_second.value = ""
+	select_third.value = ""
+	select_short.value = ""
+	select_lfield.value = ""
+	select_cfield.value = ""
+	select_rfield.value = ""
+	pitcher_dh_lab.text = ' '+ select_pitcher_dh.value	+' '
+	catcher_lab.text    = ' '+ select_catcher.value		+' '
+	first_lab.text      = ' '+ select_first.value		+' '
+	second_lab.text     = ' '+ select_second.value		+' '
+	third_lab.text      = ' '+ select_third.value		+' '
+	short_lab.text      = ' '+ select_short.value		+' '
+	lfield_lab.text     = ' '+ select_lfield.value		+' '
+	cfield_lab.text     = ' '+ select_cfield.value		+' '
+	rfield_lab.text     = ' '+ select_rfield.value		+' '
+
 
 # Call the update_lineup function whenever button is pushed
-button.on_click(update_lineup)
+lineup_button.on_click(update_lineup)
+team_button.on_click(update_players)
 
 
 # Make widgetbox for position select dropdowns
-position_select_widgetbox = widgetbox(position_select_list + [button])
+position_select_widgetbox = widgetbox(position_select_list + [lineup_button])
 
-curdoc().add_root(column(row(position_select_widgetbox, field), output))
+curdoc().add_root(column(row(column(team_select, team_button), position_select_widgetbox, field), team_text, batting_order_text))
 curdoc().title = "Baseball Markov Chain"
 
 
