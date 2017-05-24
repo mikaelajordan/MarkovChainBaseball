@@ -60,37 +60,42 @@ player_types = pd.DataFrame(index = ['power','contact','speed','mendoza'])
 #display(margins(player_type.ix['power','T']))
 
 
-#Make crude "typical" matrix - roughly 30% chance of hit, 70% of out.
+#Make crude "typical" random matrices - batting average mean=~.270, std=~.030
 #d_outs is number of outs on the play
 d_outs = np.subtract.outer(states['outs'],states['outs']).T
 d_outs = pd.DataFrame(d_outs,index=header,columns=header)
 d_outs = d_outs.ix[:-4,:]
 d_outs[~valid] = -1
 
-#f makes 30% chance of hit, 70% chance of out.  It divides these probs equally among all 
-#possible ways to make hit or out.
-def f(r):
+#f take the prob of hit/out and divides it equally among all possible ways to make a hit/out.
+def f(r,bat_ave):    
     #c counts all ways to make 0, 1, 2, or 3 outs during this AB.
     c = r.value_counts()
     #d is total prob of making 0, 1, 2, or 3 outs during this AB.
     #Note d[-1]=0 (impossible) and d[3]=0 (triple plays are extremely rare)
-    d = c*0
-    d[0] = 3
-    d[1] = 7
-    #d[2] = 1/11 if a double play is possble.
+    d = c*0    
+    d[0] = bat_ave
+    #Give double play 5% prob (if double play is possible in state_in)
     try:
         if c.ix[2] > 0:
-            d[2] = 1
+            d[2] = 50
     except:
-        pass    
+        #fails if 2 is not in c OR if c[2]=0
+        pass
+    #Remaining prob given to 1 out
+    d[1] = 1000 - d.sum()
+    #normalizes d
     d /= d.sum()
-    #d is either [0/10, 3/10, 7/10, 0/10, 0/10] or [0/11, 3/11, 7/11, 1/11,0/11]
-    #is distributes these probs equally among the ways to get there.
+    #divides by # of ways to make 0, 1, 2, or 3 outs during this AB.
     e = (d/c).fillna(0)
+    #fill transition matrix row
     return r.replace(e)
-T = d_outs.apply(f,axis=1)
-player_types['T'] = [T.copy() for d in player_types.index]
 
+#batting ave center at 0.270 with std .090
+player_types['bat_ave'] = 270 + 90*np.random.randn(player_types.shape[0])
+
+player_types['T'] = [d_outs.apply(f,args=[player_types.ix[p,'bat_ave']],axis=1)
+                     for p in player_types.index]
 
 
 #Make our team's roster
@@ -105,6 +110,8 @@ players['coefs'] = [make_rand_coefs() for p in players.index]
 #Each player has a unique T which is a linear combination of the player type T's
 #using that player's coefs as weights.
 players['T'] = [players.ix[p,'coefs'].dot(player_types['T']).values for p in players.index]
+players['bat_ave'] = [players.ix[p,'coefs'].dot(player_types['bat_ave']) for p in players.index]
+
 #display(margins(player.ix['David','T']))
 
 os.makedirs('./data', exist_ok=True) 
