@@ -1,6 +1,6 @@
 import itertools as it
 import math
-import copy
+from copy import copy
 import datetime
 import os
 import shutil
@@ -59,7 +59,7 @@ def margins(df):
     df['TOTAL'] = row_sums
     return df
 
-def get_summary_stats(v):
-    ss = pd.Series(v.ravel()).describe()
+def get_summary_stats(v):    
+    ss = pd.DataFrame(v).describe().T
     ss['SE'] = ss['std'] / np.sqrt(ss['count'])
     return ss
